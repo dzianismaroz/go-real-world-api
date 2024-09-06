@@ -1,8 +1,13 @@
 package model
 
-import "time"
+import (
+	"time"
+
+	"github.com/jinzhu/gorm"
+)
 
 type Article struct {
+	gorm.Model
 	Author          Author    `json:"author"`
 	CreatedAt       time.Time `json:"createdAt"`
 	Description     string    `json:"descrtiption"`

@@ -121,7 +121,7 @@ func TestApp(t *testing.T) {
 	}
 
 	testCases := []*ApiTestCase{
-		&ApiTestCase{
+		{
 			Name:           "Auth - Register",
 			Method:         "POST",
 			Body:           "{\"user\":{\"email\":\"{{EMAIL}}\", \"password\":\"{{PASSWORD}}\", \"username\":\"{{USERNAME}}\"}}",

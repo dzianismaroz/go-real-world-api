@@ -7,7 +7,7 @@ import (
 	_ "github.com/golang-jwt/jwt"
 
 	// _ "github.com/golang/mock"
-	_ "github.com/gorilla/mux"
+	// _ "github.com/gorilla/mux"
 	_ "github.com/jinzhu/gorm"
 	_ "github.com/jmoiron/sqlx"
 	_ "github.com/stretchr/testify"
