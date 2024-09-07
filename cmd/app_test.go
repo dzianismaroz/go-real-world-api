@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"math/rand"
 	"net/http"
 	"net/http/httptest"
@@ -142,7 +142,7 @@ func TestApp(t *testing.T) {
 			Before: nil,
 			After:  nil,
 		},
-		&ApiTestCase{
+		{
 			Name:           "Auth - Login",
 			Method:         "POST",
 			Body:           "{\"user\":{\"email\":\"{{EMAIL}}\", \"password\":\"{{PASSWORD}}\"}}",
@@ -170,7 +170,7 @@ func TestApp(t *testing.T) {
 				return nil
 			},
 		},
-		&ApiTestCase{
+		{
 			Name:           "Auth - Current User",
 			Method:         "GET",
 			Body:           "",
@@ -192,7 +192,7 @@ func TestApp(t *testing.T) {
 			Before: nil,
 			After:  nil,
 		},
-		&ApiTestCase{
+		{
 			Name:           "Auth - Update User",
 			Method:         "PUT",
 			Body:           `{"user":{"email":"{{EMAIL}}","bio":"{{BIO}}"}}`,
@@ -224,7 +224,7 @@ func TestApp(t *testing.T) {
 				return nil
 			},
 		},
-		&ApiTestCase{
+		{
 			Name:           "Auth - Current User after Update",
 			Method:         "GET",
 			URL:            "{{APIURL}}/user",
@@ -244,7 +244,7 @@ func TestApp(t *testing.T) {
 				}
 			},
 		},
-		&ApiTestCase{
+		{
 			Name:           "Auth - Register second user",
 			Method:         "POST",
 			Body:           "{\"user\":{\"email\":\"{{EMAIL2}}\", \"password\":\"{{PASSWORD}}\", \"username\":\"{{USERNAME2}}\"}}",
@@ -272,7 +272,7 @@ func TestApp(t *testing.T) {
 			},
 		},
 
-		&ApiTestCase{
+		{
 			Name:           "Articles - Create Article - First user",
 			Method:         "POST",
 			Body:           `{"article":{"title":"How to write golang tests", "description":"I have problem with mondodb mocking", "body":"Any ideas how to write some intermidiate layer atop collection?", "tagList":["golang","testing", "gomock"]}}`,
@@ -306,7 +306,7 @@ func TestApp(t *testing.T) {
 				return nil
 			},
 		},
-		&ApiTestCase{
+		{
 			Name:           "Articles - Create Article - Second user",
 			Method:         "POST",
 			Body:           `{"article":{"title":"What will be released first, Half-Life 3 or 3-rd part of golang course?", "description":"Who knows topics in new course?", "body":"Will we use JWT-tokens in homework?", "tagList":["halflife3","coursera"]}}`,
@@ -340,7 +340,7 @@ func TestApp(t *testing.T) {
 			},
 		},
 
-		&ApiTestCase{
+		{
 			Name:           "Articles - All Articles",
 			Method:         "GET",
 			URL:            "{{APIURL}}/articles",
@@ -351,7 +351,7 @@ func TestApp(t *testing.T) {
 					ArticlesCount int           `json:"articlesCount"`
 				}{
 					Articles: []TestArticle{
-						TestArticle{
+						{
 							Slug: tplParams["slug1"],
 							Author: TestProfile{
 								Bio:      tplParams["BIO"],
@@ -364,7 +364,7 @@ func TestApp(t *testing.T) {
 							UpdatedAt:   FakeTime{true},
 							TagList:     []string{"golang", "testing", "gomock"},
 						},
-						TestArticle{
+						{
 							Slug: tplParams["slug2"],
 							Author: TestProfile{
 								Username: tplParams["USERNAME2"],
@@ -384,7 +384,7 @@ func TestApp(t *testing.T) {
 			After:  nil,
 		},
 
-		&ApiTestCase{
+		{
 			Name:           "Articles - by author",
 			Method:         "GET",
 			URL:            "{{APIURL}}/articles?author={{USERNAME2}}",
@@ -396,7 +396,7 @@ func TestApp(t *testing.T) {
 					ArticlesCount int           `json:"articlesCount"`
 				}{
 					Articles: []TestArticle{
-						TestArticle{
+						{
 							Slug: tplParams["slug2"],
 							Author: TestProfile{
 								Username: tplParams["USERNAME2"],
@@ -415,7 +415,7 @@ func TestApp(t *testing.T) {
 			Before: nil,
 			After:  nil,
 		},
-		&ApiTestCase{
+		{
 			Name:           "Articles - by tag",
 			Method:         "GET",
 			URL:            "{{APIURL}}/articles?tag=halflife3",
@@ -427,7 +427,7 @@ func TestApp(t *testing.T) {
 					ArticlesCount int           `json:"articlesCount"`
 				}{
 					Articles: []TestArticle{
-						TestArticle{
+						{
 							Slug: tplParams["slug2"],
 							Author: TestProfile{
 								Username: tplParams["USERNAME2"],
@@ -447,28 +447,28 @@ func TestApp(t *testing.T) {
 			After:  nil,
 		},
 
-		&ApiTestCase{
+		{
 			Name:           "No Auth - Current User - No Auth",
 			Method:         "GET",
 			URL:            "{{APIURL}}/user",
 			TokenName:      "", // none
 			ResponseStatus: 401,
 		},
-		&ApiTestCase{
+		{
 			Name:           "No Auth - Current User Logout - Require Auth",
 			Method:         "POST",
 			URL:            "{{APIURL}}/user/logout",
 			TokenName:      "", // none
 			ResponseStatus: 401,
 		},
-		&ApiTestCase{
+		{
 			Name:           "No Auth - Current User Logout",
 			Method:         "POST",
 			URL:            "{{APIURL}}/user/logout",
 			TokenName:      "token1",
 			ResponseStatus: 200,
 		},
-		&ApiTestCase{
+		{
 			Name:           "No Auth - Current User - No Auth after logout",
 			Method:         "GET",
 			URL:            "{{APIURL}}/user",
@@ -509,7 +509,7 @@ func TestApp(t *testing.T) {
 				t.Fatalf("request error: %v", err)
 			}
 			defer resp.Body.Close()
-			respBody, err := ioutil.ReadAll(resp.Body)
+			respBody, _ := io.ReadAll(resp.Body)
 
 			// t.Logf("\nreq body: %s\nresp body: %s", body, respBody)
 

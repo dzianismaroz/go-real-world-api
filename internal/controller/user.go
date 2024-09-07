@@ -1,16 +1,14 @@
 package service
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
-	"log"
 	"net/http"
 	api "rwa/internal/repository/api"
 	impl "rwa/internal/repository/inmemory"
+	"rwa/internal/utils"
 	"rwa/pkg/model"
-
-	"strings"
+	m "rwa/pkg/model/msg"
+	"time"
 )
 
 type userInMemService struct {
@@ -21,63 +19,27 @@ func NewUserController() *userInMemService {
 	return &userInMemService{repository: impl.NewUserRepository()}
 }
 
-func (uc *userInMemService) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
-	switch req.Method {
-	case http.MethodPost:
-		if strings.HasSuffix(req.URL.Path, "/login") {
-			uc.Login(rw, req)
-			return
-		}
-		uc.Register(rw, req)
-	case http.MethodGet:
-		uc.GetCurrent(rw, req)
-	}
-}
-
-func closeResources(closer io.Closer) {
-
-	err := closer.Close()
-	if err != nil {
-		log.Fatal("unable to close request body")
-	}
-}
-
-func safeWrite(w http.ResponseWriter, statusCode int, content []byte) {
-	w.WriteHeader(statusCode)
-	_, err := w.Write(content)
-	if err != nil {
-		http.Error(w, "unexpected error", http.StatusInternalServerError)
-	}
-}
-
+// Register new user from RegisterMessage. Reply a UserProfile
 func (uc *userInMemService) Register(rw http.ResponseWriter, req *http.Request) {
-	rawBodyBytes, err := io.ReadAll(req.Body)
-	defer closeResources(req.Body)
+	// extract request payload to RegisterMessage
+	registerMessage, err := utils.ReadFromRequest[m.RegisterMessage](req)
 	if err != nil {
-		http.Error(rw, fmt.Errorf("failed to register : %w", err).Error(), http.StatusInternalServerError)
+		http.Error(rw, err.Error(), http.StatusUnprocessableEntity)
 		return
 	}
-	result := &model.User{}
-	if err := json.Unmarshal(rawBodyBytes, &result); err != nil {
-		http.Error(rw, fmt.Errorf("failed to register : %w", err).Error(), http.StatusInternalServerError)
-		return
-	}
-
-	if _, err := uc.repository.Add(result); err != nil {
-		http.Error(rw, "failed to register", http.StatusInternalServerError)
-		return
-	}
-
-	respBytes, err := json.Marshal(result)
+	// attempt to register new user
+	createdUser, err := uc.repository.Add(registerMessage)
 	if err != nil {
-		http.Error(rw, fmt.Errorf("failed to register : %w", err).Error(), http.StatusInternalServerError)
+		http.Error(rw, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	rw.WriteHeader(http.StatusCreated)
-	n, err := rw.Write(respBytes)
-	if err != nil || n < 1 {
-		http.Error(rw, "unexpected error", http.StatusInternalServerError)
+	// reply with newly created user's profile
+	profile := model.UserProfile{}.BuildFrom(createdUser)
+	respBytes, ok := utils.Marshall(rw, profile)
+	if !ok {
+		return
 	}
+	utils.SafeResponseWrite(rw, respBytes, http.StatusCreated)
 }
 
 func (uc *userInMemService) GetCurrent(rw http.ResponseWriter, req *http.Request) {
@@ -95,10 +57,31 @@ func (uc *userInMemService) UpdateCurrent(rw http.ResponseWriter, req *http.Requ
 }
 
 func (uc *userInMemService) Login(rw http.ResponseWriter, req *http.Request) {
-	rw.WriteHeader(http.StatusOK)
-	if _, err := rw.Write([]byte("attempt to login")); err != nil {
-		http.Error(rw, "failed to login", http.StatusInternalServerError)
+	logonMessage, err := utils.ReadFromRequest[m.LogonMessage](req)
+	if err != nil {
+		http.Error(rw, fmt.Errorf("failed to logon : %w", err).Error(), http.StatusUnprocessableEntity)
+		return
 	}
+
+	profile, err := uc.repository.Authorize(logonMessage)
+	if err != nil {
+		http.Error(rw, fmt.Errorf("failed to logon : %w", err).Error(), http.StatusUnauthorized)
+		return
+	}
+
+	sessID := utils.RandStringRunes(32)
+	cookie := &http.Cookie{
+		Name:    "session_id",
+		Value:   sessID,
+		Expires: time.Now().Add(90 * 24 * time.Hour),
+		Path:    "/",
+	}
+	http.SetCookie(rw, cookie)
+	respBytes, ok := utils.Marshall(rw, profile)
+	if !ok {
+		return
+	}
+	utils.SafeResponseWrite(rw, respBytes, http.StatusOK)
 }
 
 func (uc *userInMemService) Logout() error {

@@ -2,9 +2,11 @@ package handlers
 
 import (
 	"net/http"
-	service "rwa/internal/controller"
+	. "rwa/internal/controller"
 
 	"time"
+
+	auth "rwa/internal/handlers/http"
 
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
@@ -14,8 +16,11 @@ import (
 func GetApp() http.Handler {
 
 	r := chi.NewRouter()
+	// -------    middleware   -------
 	r.Use(middleware.Logger)
 	r.Use(middleware.Timeout(10 * time.Second))
+	r.Use(auth.AuthMiddleware)
+	// ---------   routers     -------
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("hi"))
 	})
@@ -27,23 +32,23 @@ func buildEndpoints() chi.Router {
 	r := chi.NewRouter()
 
 	r.Route("/users", func(r chi.Router) {
-		userController := service.NewUserController()
+		userController := NewUserController()
+		r.Post("/login", userController.Login)
 		r.Get("/", userController.GetCurrent)
 		r.Put("/", userController.UpdateCurrent)
 		r.Post("/", userController.Register)
-		r.Post("/login", userController.Login)
 	})
 
 	r.Mount("/tags", func() http.Handler {
 		r := chi.NewRouter()
-		tagsController := service.NewTagsController()
+		tagsController := NewTagsController()
 		r.Get("/", tagsController.ListTags)
 		return r
 	}())
 
 	r.Mount("/articles", func() http.Handler {
 		r := chi.NewRouter()
-		articleController := service.NewArticleService()
+		articleController := NewArticleService()
 		r.Get("/", articleController.ServeHTTP)
 		return r
 	}())

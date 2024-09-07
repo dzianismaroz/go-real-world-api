@@ -1,12 +1,32 @@
 package model
 
+import "time"
+
 type UserProfile struct {
-	Bio       string `json:"bio"`
-	Following bool   `json:"following"`
-	Image     string `json:"image"`
-	Username  string `json:"username"`
+	User InnerContent `json:"user"`
 }
 
-func BuildFrom(user *User) UserProfile {
-	return UserProfile{}
+type InnerContent struct {
+	Email     string    `json:"email"`
+	Bio       string    `json:"bio"`
+	Following bool      `json:"following"`
+	Image     string    `json:"image"`
+	Token     string    `json:"token"`
+	Username  string    `json:"username"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+func (up UserProfile) BuildFrom(user *User) UserProfile {
+	return UserProfile{
+		User: InnerContent{
+			Email:     user.Email,
+			Bio:       user.Bio,
+			Following: user.Following,
+			Image:     user.Image,
+			Username:  user.Username,
+			CreatedAt: user.CreatedAt,
+			UpdatedAt: user.UpdatedAt,
+		},
+	}
 }
