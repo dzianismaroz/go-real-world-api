@@ -49,7 +49,16 @@ func buildEndpoints() chi.Router {
 	r.Mount("/articles", func() http.Handler {
 		r := chi.NewRouter()
 		articleController := NewArticleService()
-		r.Get("/", articleController.ServeHTTP)
+		r.Get("/", articleController.GetRecentGlobally)
+		r.Post("/", articleController.CreateArticle)
+		r.Get("/feed", articleController.GetRecentFollowers)
+		r.Put("/{slug}", articleController.UpdateArticle)
+		r.Get("/{slug}", articleController.GetArticle)
+		r.Delete("/{slug}", articleController.DeleteArticle)
+		r.Get("/{slug}/comments", articleController.GetComments)
+		r.Post("/{slug}/comments", articleController.PostComments)
+		r.Delete("/{slug}/comments/{id}", articleController.DeleteComments)
+
 		return r
 	}())
 

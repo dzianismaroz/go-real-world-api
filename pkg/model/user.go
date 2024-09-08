@@ -35,3 +35,27 @@ func (u User) BuildFrom(r *msg.RegisterMessage) *User {
 		Email:    r.Inner.Email,
 	}
 }
+
+func (u *User) MergeFrom(other *UserProfile) User {
+	result := User{
+		id:           u.id,
+		Email:        u.Email,
+		Bio:          u.Bio,
+		Username:     u.Username,
+		Image:        u.Image,
+		Following:    u.Following,
+		PasswordHash: u.PasswordHash,
+		CreatedAt:    u.CreatedAt,
+		UpdatedAt:    time.Now(),
+	}
+
+	if other.Inner.Username != "" {
+		result.Username = other.Inner.Username
+	}
+
+	if other.Inner.Email != "" {
+		result.Email = other.Inner.Email
+	}
+	result.Bio = other.Inner.Bio
+	return result
+}

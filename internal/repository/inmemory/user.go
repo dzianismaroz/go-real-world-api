@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"log"
 	"rwa/internal/utils"
 	. "rwa/pkg/model"
-	model "rwa/pkg/model/msg"
+	msg "rwa/pkg/model/msg"
 	"time"
 
 	"golang.org/x/crypto/argon2"
@@ -25,7 +26,7 @@ func NewUserRepository() *userInMemRepository {
 	return &userInMemRepository{db: make(map[uint64]*User, 10)}
 }
 
-func (r userInMemRepository) Add(register *model.RegisterMessage) (*User, error) {
+func (r userInMemRepository) Add(register *msg.RegisterMessage) (*User, error) {
 	user := User{}.BuildFrom(register)
 	// user with such ID already exists
 	if user.GetId() != 0 {
@@ -53,16 +54,20 @@ func hashPass(plainPassword, salt string) []byte {
 	return append(res, hashedPass...)
 }
 
-func (r userInMemRepository) Update(user *User) (*User, error) {
-
-	if user.GetId() == 0 {
+func (r userInMemRepository) Update(user *User, merge *UserProfile) (*User, error) {
+	candidate := user.MergeFrom(merge)
+	if candidate.GetId() == 0 {
+		log.Println("##### missed id")
 		return nil, errors.New(missedIdErr)
 	}
-	if _, ok := r.db[user.GetId()]; !ok {
+	if _, ok := r.db[candidate.GetId()]; !ok {
+		log.Println("##### no such user")
 		return nil, errors.New("No such user")
 	}
-	r.db[user.GetId()] = user
-	return user, nil
+
+	r.db[candidate.GetId()] = &candidate
+
+	return &candidate, nil
 }
 
 func (r userInMemRepository) Delete(user *User) error {
@@ -86,7 +91,7 @@ func (r userInMemRepository) Find(id uint64) (*User, error) {
 	return nil, noResultsErr
 }
 
-func (r userInMemRepository) Authorize(logon *model.LogonMessage) (UserProfile, error) {
+func (r userInMemRepository) Authorize(logon *msg.LogonMessage) (UserProfile, error) {
 	profile := UserProfile{}
 	existentUser, err := r.FindBy(logon.Inner.Email)
 	if err != nil {
@@ -97,8 +102,10 @@ func (r userInMemRepository) Authorize(logon *model.LogonMessage) (UserProfile, 
 	if !bytes.Equal(hashPass(logon.Inner.Password, salt), existentUser.PasswordHash) {
 		return profile, fmt.Errorf("Bad pass")
 	}
-	GetSessionManager().Create()
-	return profile.BuildFrom(existentUser), nil
+	token := GetSessionManager().Create(existentUser)
+	reply := profile.BuildFrom(existentUser)
+	reply.Inner.Token = token
+	return reply, nil
 }
 
 func (r userInMemRepository) FindBy(email string) (*User, error) {

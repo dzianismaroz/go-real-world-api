@@ -3,7 +3,7 @@ package model
 import "time"
 
 type UserProfile struct {
-	User InnerContent `json:"user"`
+	Inner InnerContent `json:"user"`
 }
 
 type InnerContent struct {
@@ -19,7 +19,7 @@ type InnerContent struct {
 
 func (up UserProfile) BuildFrom(user *User) UserProfile {
 	return UserProfile{
-		User: InnerContent{
+		Inner: InnerContent{
 			Email:     user.Email,
 			Bio:       user.Bio,
 			Following: user.Following,
@@ -28,5 +28,16 @@ func (up UserProfile) BuildFrom(user *User) UserProfile {
 			CreatedAt: user.CreatedAt,
 			UpdatedAt: user.UpdatedAt,
 		},
+	}
+}
+
+func (up *UserProfile) IsValid() bool {
+	switch {
+	case up.Inner.Email == "":
+		return false
+	case up.Inner.Username == "":
+		return false
+	default:
+		return true
 	}
 }

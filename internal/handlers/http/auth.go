@@ -1,9 +1,14 @@
 package auth
 
 import (
+	"context"
 	"net/http"
 	repository "rwa/internal/repository/inmemory"
 )
+
+type CtxKey int
+
+const UserKey CtxKey = 1
 
 // permitted paths :
 // * POST /api/users        Content-Type: application/json
@@ -30,11 +35,13 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 		// Authorize request. Fail if not allowed
-		if err := repository.GetSessionManager().Check(req); err != nil {
+		userId, err := repository.GetSessionManager().Check(req)
+		if err != nil {
 			http.Error(rw, "unauthorized", http.StatusUnauthorized)
 			return
 		}
-		next.ServeHTTP(rw, req)
+		ctx := context.WithValue(req.Context(), UserKey, userId)
+		next.ServeHTTP(rw, req.WithContext(ctx))
 	})
 
 }

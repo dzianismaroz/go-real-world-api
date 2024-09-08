@@ -10,6 +10,6 @@ type UserRepository interface {
 	Find(id uint64) (*User, error)
 	FindBy(email string) (*User, error)
 	Add(user *model.RegisterMessage) (*User, error)
-	Update(user *User) (*User, error)
+	Update(user *User, merge *UserProfile) (*User, error)
 	Delete(user *User) error
 }

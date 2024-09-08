@@ -5,11 +5,15 @@ import (
 	"fmt"
 	"net/http"
 	. "rwa/internal/repository/api"
+	"rwa/internal/utils"
 	. "rwa/pkg/model"
+	"strings"
 	"sync"
 )
 
-var lock = sync.Mutex{}
+const tokenConst = "Token "
+
+var lock = sync.RWMutex{}
 var instance *inMemSessionManager
 
 type inMemSessionManager struct {
@@ -33,28 +37,37 @@ func newInMemSessionManager() *inMemSessionManager {
 	}
 }
 
-func (im *inMemSessionManager) Check(req *http.Request) error {
+func (im *inMemSessionManager) Check(req *http.Request) (UserId, error) {
 	token, err := extractTokenFrom(req)
 	if err != nil {
-		return errors.New("no valid sessions")
+		return 0, errors.New("no valid sessions")
 	}
-	if _, ok := im.sessions[token]; !ok {
-		return fmt.Errorf("no valid sessions by id %s", token)
+	lock.RLock()
+	defer lock.RUnlock()
+	if session, ok := im.sessions[token]; !ok {
+		return 0, fmt.Errorf("no valid sessions by id %s", token)
 	} else {
-		return nil
+		return session.UserId, nil
 	}
 }
 
 func extractTokenFrom(req *http.Request) (string, error) {
 	token := req.Header.Get("Authorization")
-	if len(token) < 1 {
+	if len(token) < 1 || !strings.HasPrefix(token, tokenConst) {
 		return "", errors.New("no token")
 	}
-	return token, nil
+	return strings.Replace(token, tokenConst, "", -1), nil
 }
 
-func (im *inMemSessionManager) Create(rw http.ResponseWriter, user *User) error {
-	panic("not implemented") // TODO: Implement
+func (im *inMemSessionManager) Create(user *User) SessionId {
+	session := Session{UserId: user.GetId(), SessionId: utils.RandStringRunes(32)}
+	lock.Lock()
+	defer lock.Unlock()
+	im.sessions[session.SessionId] = session
+	userSessions := im.sessionsOfUser[user.GetId()]
+	userSessions = append(userSessions, session)
+	im.sessionsOfUser[user.GetId()] = userSessions
+	return session.SessionId
 }
 
 func (im *inMemSessionManager) DestroyCurrent(rw http.ResponseWriter, req *http.Request) error {

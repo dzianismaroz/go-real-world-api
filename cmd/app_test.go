@@ -174,7 +174,7 @@ func TestApp(t *testing.T) {
 			Name:           "Auth - Current User",
 			Method:         "GET",
 			Body:           "",
-			URL:            "{{APIURL}}/user",
+			URL:            "{{APIURL}}/users",
 			TokenName:      "token1",
 			ResponseStatus: 200,
 			Expected: func() interface{} {
@@ -196,7 +196,7 @@ func TestApp(t *testing.T) {
 			Name:           "Auth - Update User",
 			Method:         "PUT",
 			Body:           `{"user":{"email":"{{EMAIL}}","bio":"{{BIO}}"}}`,
-			URL:            "{{APIURL}}/user",
+			URL:            "{{APIURL}}/users",
 			TokenName:      "token1",
 			ResponseStatus: 200,
 			Expected: func() interface{} {
@@ -227,7 +227,7 @@ func TestApp(t *testing.T) {
 		{
 			Name:           "Auth - Current User after Update",
 			Method:         "GET",
-			URL:            "{{APIURL}}/user",
+			URL:            "{{APIURL}}/users",
 			TokenName:      "token1",
 			ResponseStatus: 200,
 			Expected: func() interface{} {

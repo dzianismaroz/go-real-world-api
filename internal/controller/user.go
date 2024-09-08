@@ -1,14 +1,17 @@
 package service
 
 import (
+	"errors"
 	"fmt"
+	"log"
 	"net/http"
+	auth "rwa/internal/handlers/http"
 	api "rwa/internal/repository/api"
 	impl "rwa/internal/repository/inmemory"
+	repository "rwa/internal/repository/inmemory"
 	"rwa/internal/utils"
 	"rwa/pkg/model"
 	m "rwa/pkg/model/msg"
-	"time"
 )
 
 type userInMemService struct {
@@ -23,7 +26,7 @@ func NewUserController() *userInMemService {
 func (uc *userInMemService) Register(rw http.ResponseWriter, req *http.Request) {
 	// extract request payload to RegisterMessage
 	registerMessage, err := utils.ReadFromRequest[m.RegisterMessage](req)
-	if err != nil {
+	if err != nil || !registerMessage.IsValid() {
 		http.Error(rw, err.Error(), http.StatusUnprocessableEntity)
 		return
 	}
@@ -42,18 +45,62 @@ func (uc *userInMemService) Register(rw http.ResponseWriter, req *http.Request) 
 	utils.SafeResponseWrite(rw, respBytes, http.StatusCreated)
 }
 
-func (uc *userInMemService) GetCurrent(rw http.ResponseWriter, req *http.Request) {
-	rw.WriteHeader(http.StatusOK)
-	if _, err := rw.Write([]byte("current use is unknown yet")); err != nil {
-		http.Error(rw, "failed to register", http.StatusInternalServerError)
+func (uc *userInMemService) resolveCurrent(req *http.Request) (*model.User, error) {
+	userIdRaw := req.Context().Value(auth.UserKey)
+	if userIdRaw == 0 {
+		return nil, errors.New("failed to resolve curent user")
 	}
+	userID := userIdRaw.(uint64)
+	existentUser, err := uc.repository.Find(userID)
+	if err != nil {
+		return nil, errors.New("failed to resolve curent user")
+	}
+	return existentUser, nil
+}
+
+func (uc *userInMemService) GetCurrent(rw http.ResponseWriter, req *http.Request) {
+	existentUser, err := uc.resolveCurrent(req)
+	if err != nil {
+		http.Error(rw, "failed to resolve curent user", http.StatusUnprocessableEntity)
+		return
+	}
+	profile := model.UserProfile{}.BuildFrom(existentUser)
+	respBytes, ok := utils.Marshall(rw, profile)
+	if !ok {
+		return
+	}
+	utils.SafeResponseWrite(rw, respBytes, http.StatusOK)
+
 }
 
 func (uc *userInMemService) UpdateCurrent(rw http.ResponseWriter, req *http.Request) {
-	rw.WriteHeader(http.StatusOK)
-	if _, err := rw.Write([]byte("current use is unknown yet")); err != nil {
-		http.Error(rw, "failed to register", http.StatusInternalServerError)
+	existentUser, err := uc.resolveCurrent(req)
+	if err != nil {
+		http.Error(rw, "failed to resolve curent user", http.StatusUnprocessableEntity)
+		return
 	}
+	updateMessage, err := utils.ReadFromRequest[model.UserProfile](req)
+	if err != nil {
+		log.Println("#### is valid ?", updateMessage.IsValid())
+		http.Error(rw, fmt.Errorf("failed to update user : %w", err).Error(), http.StatusUnprocessableEntity)
+		return
+	}
+	result, err := uc.repository.Update(existentUser, updateMessage)
+	if err != nil {
+		http.Error(rw, fmt.Errorf("failed to update user : %w", err).Error(), http.StatusUnprocessableEntity)
+		return
+	}
+
+	profile := model.UserProfile{}.BuildFrom(result)
+	sm := repository.GetSessionManager()
+	sm.DestroyCurrent(rw, req)
+	token := sm.Create(result)
+	profile.Inner.Token = token
+	respBytes, ok := utils.Marshall(rw, profile)
+	if !ok {
+		return
+	}
+	utils.SafeResponseWrite(rw, respBytes, http.StatusOK)
 }
 
 func (uc *userInMemService) Login(rw http.ResponseWriter, req *http.Request) {
@@ -69,14 +116,6 @@ func (uc *userInMemService) Login(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	sessID := utils.RandStringRunes(32)
-	cookie := &http.Cookie{
-		Name:    "session_id",
-		Value:   sessID,
-		Expires: time.Now().Add(90 * 24 * time.Hour),
-		Path:    "/",
-	}
-	http.SetCookie(rw, cookie)
 	respBytes, ok := utils.Marshall(rw, profile)
 	if !ok {
 		return
