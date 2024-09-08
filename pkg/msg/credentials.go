@@ -5,7 +5,7 @@ type Credentials struct {
 	Password string `json:"password"`
 }
 
-func (c *Credentials) IsValid() bool {
+func (c Credentials) IsValid() bool {
 	switch {
 	case c.Email == "":
 		return false

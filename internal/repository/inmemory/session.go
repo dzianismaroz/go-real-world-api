@@ -60,13 +60,13 @@ func extractTokenFrom(req *http.Request) (string, error) {
 }
 
 func (im *inMemSessionManager) Create(user *User) SessionId {
-	session := Session{UserId: user.GetId(), SessionId: utils.RandStringRunes(32)}
+	session := Session{UserId: user.ID, SessionId: utils.RandStringRunes(32)}
 	lock.Lock()
 	defer lock.Unlock()
 	im.sessions[session.SessionId] = session
-	userSessions := im.sessionsOfUser[user.GetId()]
+	userSessions := im.sessionsOfUser[user.ID]
 	userSessions = append(userSessions, session)
-	im.sessionsOfUser[user.GetId()] = userSessions
+	im.sessionsOfUser[user.ID] = userSessions
 	return session.SessionId
 }
 
@@ -94,10 +94,10 @@ func (im *inMemSessionManager) DestroyCurrent(rw http.ResponseWriter, req *http.
 }
 
 func (im *inMemSessionManager) DestroyAll(rw http.ResponseWriter, user *User) error {
-	if user.GetId() == 0 {
+	if user.ID == 0 {
 		return errors.New("invalid user")
 	}
-	sessions, ok := im.sessionsOfUser[user.GetId()]
+	sessions, ok := im.sessionsOfUser[user.ID]
 	if !ok || len(sessions) < 1 {
 		return fmt.Errorf("no active sessions by user %s", user.Username)
 	}
@@ -106,7 +106,7 @@ func (im *inMemSessionManager) DestroyAll(rw http.ResponseWriter, user *User) er
 		delete(im.sessions, s.SessionId)
 	}
 
-	delete(im.sessionsOfUser, user.GetId())
+	delete(im.sessionsOfUser, user.ID)
 
 	return nil
 }

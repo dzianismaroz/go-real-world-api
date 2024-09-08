@@ -7,9 +7,15 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+
+	"golang.org/x/crypto/argon2"
 )
 
 var letterRunes = []rune("abcdefghijklmnopqrstuvwxyz")
+
+type ValidMessage interface {
+	IsValid() bool
+}
 
 func RandStringRunes(n int) string {
 	b := make([]rune, n)
@@ -20,6 +26,10 @@ func RandStringRunes(n int) string {
 }
 
 // https://gist.github.com/ik5/d8ecde700972d4378d87
+
+type CtxKey int
+
+const UserKey CtxKey = 1
 
 var (
 	Info = LogTeal
@@ -46,7 +56,7 @@ func Color(colorString string) func(...interface{}) {
 }
 
 // Read from request json payload to exact entity
-func ReadFromRequest[T any](req *http.Request) (*T, error) {
+func ReadFromRequest[T ValidMessage](req *http.Request) (*T, error) {
 	var target T
 	rawBodyBytes, err := io.ReadAll(req.Body)
 	// log.Println("byte payload : " + string(rawBodyBytes))
@@ -54,8 +64,12 @@ func ReadFromRequest[T any](req *http.Request) (*T, error) {
 	if err != nil {
 		return &target, fmt.Errorf("failed to register : %w", err)
 	}
+
 	if err := json.Unmarshal(rawBodyBytes, &target); err != nil {
 		return &target, fmt.Errorf("failed to register : %w", err)
+	}
+	if !target.IsValid() {
+		return &target, fmt.Errorf("non-valid message")
 	}
 	// log.Printf("unmarshalled: %+v\n", target)
 	return &target, nil
@@ -78,7 +92,13 @@ func SafeResponseWrite(rw http.ResponseWriter, content []byte, status int) {
 		http.Error(rw, "unexpected error", http.StatusInternalServerError)
 		return
 	}
+}
 
+func HashPass(plainPassword, salt string) []byte {
+	hashedPass := argon2.IDKey([]byte(plainPassword), []byte(salt), 1, 64*1024, 4, 32)
+	res := make([]byte, len(salt))
+	copy(res, salt)
+	return append(res, hashedPass...)
 }
 
 func closeResources(closer io.Closer) {

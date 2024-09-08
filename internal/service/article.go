@@ -6,15 +6,15 @@ import (
 	. "rwa/internal/repository/inmemory"
 )
 
-type articleService struct {
+type ArticleService struct {
 	repo api.ArticilesRepository
 }
 
-func NewArticleService() *articleService {
-	return &articleService{repo: NewArticlesRepository()}
+func NewArticleService() *ArticleService {
+	return &ArticleService{repo: NewArticlesRepository()}
 }
 
-func (as *articleService) CreateArticle(rw http.ResponseWriter, req *http.Request) {
+func (as *ArticleService) CreateArticle(rw http.ResponseWriter, req *http.Request) {
 	rw.WriteHeader(http.StatusCreated)
 	_, err := rw.Write([]byte("ARTICLES"))
 	if err != nil {
@@ -22,7 +22,7 @@ func (as *articleService) CreateArticle(rw http.ResponseWriter, req *http.Reques
 	}
 }
 
-func (as *articleService) GetRecentGlobally(rw http.ResponseWriter, req *http.Request) {
+func (as *ArticleService) GetRecentGlobally(rw http.ResponseWriter, req *http.Request) {
 	rw.WriteHeader(http.StatusOK)
 	_, err := rw.Write([]byte("ARTICLES"))
 	if err != nil {
@@ -30,7 +30,7 @@ func (as *articleService) GetRecentGlobally(rw http.ResponseWriter, req *http.Re
 	}
 }
 
-func (as *articleService) GetRecentFollowers(rw http.ResponseWriter, req *http.Request) {
+func (as *ArticleService) GetRecentFollowers(rw http.ResponseWriter, req *http.Request) {
 	rw.WriteHeader(http.StatusOK)
 	_, err := rw.Write([]byte("ARTICLES"))
 	if err != nil {
@@ -38,7 +38,7 @@ func (as *articleService) GetRecentFollowers(rw http.ResponseWriter, req *http.R
 	}
 }
 
-func (as *articleService) UpdateArticle(rw http.ResponseWriter, req *http.Request) {
+func (as *ArticleService) UpdateArticle(rw http.ResponseWriter, req *http.Request) {
 	rw.WriteHeader(http.StatusOK)
 	_, err := rw.Write([]byte("ARTICLES"))
 	if err != nil {
@@ -46,7 +46,7 @@ func (as *articleService) UpdateArticle(rw http.ResponseWriter, req *http.Reques
 	}
 }
 
-func (as *articleService) GetArticle(rw http.ResponseWriter, req *http.Request) {
+func (as *ArticleService) GetArticle(rw http.ResponseWriter, req *http.Request) {
 	rw.WriteHeader(http.StatusOK)
 	_, err := rw.Write([]byte("ARTICLES"))
 	if err != nil {
@@ -54,7 +54,7 @@ func (as *articleService) GetArticle(rw http.ResponseWriter, req *http.Request) 
 	}
 }
 
-func (as *articleService) DeleteArticle(rw http.ResponseWriter, req *http.Request) {
+func (as *ArticleService) DeleteArticle(rw http.ResponseWriter, req *http.Request) {
 	rw.WriteHeader(http.StatusOK)
 	_, err := rw.Write([]byte("ARTICLES"))
 	if err != nil {
@@ -62,7 +62,7 @@ func (as *articleService) DeleteArticle(rw http.ResponseWriter, req *http.Reques
 	}
 }
 
-func (as *articleService) GetComments(rw http.ResponseWriter, req *http.Request) {
+func (as *ArticleService) GetComments(rw http.ResponseWriter, req *http.Request) {
 	rw.WriteHeader(http.StatusOK)
 	_, err := rw.Write([]byte("ARTICLES"))
 	if err != nil {
@@ -70,7 +70,7 @@ func (as *articleService) GetComments(rw http.ResponseWriter, req *http.Request)
 	}
 }
 
-func (as *articleService) PostComments(rw http.ResponseWriter, req *http.Request) {
+func (as *ArticleService) PostComments(rw http.ResponseWriter, req *http.Request) {
 	rw.WriteHeader(http.StatusOK)
 	_, err := rw.Write([]byte("ARTICLES"))
 	if err != nil {
@@ -78,7 +78,7 @@ func (as *articleService) PostComments(rw http.ResponseWriter, req *http.Request
 	}
 }
 
-func (as *articleService) DeleteComments(rw http.ResponseWriter, req *http.Request) {
+func (as *ArticleService) DeleteComments(rw http.ResponseWriter, req *http.Request) {
 	rw.WriteHeader(http.StatusOK)
 	_, err := rw.Write([]byte("ARTICLES"))
 	if err != nil {

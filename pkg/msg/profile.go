@@ -1,4 +1,4 @@
-package model
+package msg
 
 import "time"
 
@@ -17,26 +17,12 @@ type InnerContent struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 
-func (up UserProfile) BuildFrom(user *User) UserProfile {
-	return UserProfile{
-		Inner: InnerContent{
-			Email:     user.Email,
-			Bio:       user.Bio,
-			Following: user.Following,
-			Image:     user.Image,
-			Username:  user.Username,
-			CreatedAt: user.CreatedAt,
-			UpdatedAt: user.UpdatedAt,
-		},
-	}
-}
-
-func (up *UserProfile) IsValid() bool {
+func (up UserProfile) IsValid() bool {
 	switch {
 	case up.Inner.Email == "":
 		return false
-	case up.Inner.Username == "":
-		return false
+	// case up.Inner.Username == "":
+	// 	return false
 	default:
 		return true
 	}

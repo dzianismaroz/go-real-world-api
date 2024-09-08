@@ -2,14 +2,10 @@ package handlers
 
 import (
 	"net/http"
-	. "rwa/internal/controller"
-
 	"time"
 
-	auth "rwa/internal/handlers/http"
-
+	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
-	"github.com/go-chi/chi/v5"
 )
 
 // nolint:errcheck
@@ -19,7 +15,7 @@ func GetApp() http.Handler {
 	// -------    middleware   -------
 	r.Use(middleware.Logger)
 	r.Use(middleware.Timeout(10 * time.Second))
-	r.Use(auth.AuthMiddleware)
+	r.Use(AuthMiddleware)
 	// ---------   routers     -------
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("hi"))
@@ -32,32 +28,32 @@ func buildEndpoints() chi.Router {
 	r := chi.NewRouter()
 
 	r.Route("/users", func(r chi.Router) {
-		userController := NewUserController()
-		r.Post("/login", userController.Login)
-		r.Get("/", userController.GetCurrent)
-		r.Put("/", userController.UpdateCurrent)
-		r.Post("/", userController.Register)
+		userHandler := NewUserHandler()
+		r.Post("/login", userHandler.Login)
+		r.Get("/", userHandler.GetCurrent)
+		r.Put("/", userHandler.UpdateCurrent)
+		r.Post("/", userHandler.Register)
 	})
 
 	r.Mount("/tags", func() http.Handler {
 		r := chi.NewRouter()
-		tagsController := NewTagsController()
-		r.Get("/", tagsController.ListTags)
+		tagsHandler := NewTagsHandler()
+		r.Get("/", tagsHandler.ListTags)
 		return r
 	}())
 
 	r.Mount("/articles", func() http.Handler {
 		r := chi.NewRouter()
-		articleController := NewArticleService()
-		r.Get("/", articleController.GetRecentGlobally)
-		r.Post("/", articleController.CreateArticle)
-		r.Get("/feed", articleController.GetRecentFollowers)
-		r.Put("/{slug}", articleController.UpdateArticle)
-		r.Get("/{slug}", articleController.GetArticle)
-		r.Delete("/{slug}", articleController.DeleteArticle)
-		r.Get("/{slug}/comments", articleController.GetComments)
-		r.Post("/{slug}/comments", articleController.PostComments)
-		r.Delete("/{slug}/comments/{id}", articleController.DeleteComments)
+		articleHandler := NewArticleHandler()
+		r.Get("/", articleHandler.GetRecent)
+		r.Post("/", articleHandler.Create)
+		r.Get("/feed", articleHandler.GetByFollowers)
+		r.Put("/{slug}", articleHandler.Update)
+		r.Get("/{slug}", articleHandler.GetArticle)
+		r.Delete("/{slug}", articleHandler.DeleteArticle)
+		r.Get("/{slug}/comments", articleHandler.GetComments)
+		r.Post("/{slug}/comments", articleHandler.PostComments)
+		r.Delete("/{slug}/comments/{id}", articleHandler.DeleteComments)
 
 		return r
 	}())

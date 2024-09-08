@@ -5,7 +5,7 @@ import (
 )
 
 type Article struct {
-	Author          Author    `json:"author"`
+	Author          *Author   `json:"author"`
 	CreatedAt       time.Time `json:"createdAt"`
 	Description     string    `json:"descrtiption"`
 	Favorited       bool      `json:"favourited"`

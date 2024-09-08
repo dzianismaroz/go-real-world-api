@@ -1,15 +1,15 @@
 package msg
 
 type RegisterMessage struct {
-	Inner InnerContent `json:"user"`
+	Inner Content `json:"user"`
 }
 
-type InnerContent struct {
+type Content struct {
 	Credentials
 	Username string `json:"username"`
 }
 
-func (l *RegisterMessage) IsValid() bool {
+func (l RegisterMessage) IsValid() bool {
 	switch {
 	case l.Inner.Username == "":
 		return false
