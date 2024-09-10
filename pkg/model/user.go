@@ -16,6 +16,6 @@ type User struct {
 	UpdatedAt    time.Time
 }
 
-func (u *User) IsSameIdentity(other *User) bool {
+func (u User) Equals(other *User) bool {
 	return u.Email == other.Email || u.Username == other.Username
 }

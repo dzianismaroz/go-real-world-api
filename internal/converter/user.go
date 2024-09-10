@@ -7,8 +7,8 @@ import (
 	"time"
 )
 
-func ToProfile(user *model.User) *msg.UserProfile {
-	return &msg.UserProfile{
+func ToProfile(user model.User) msg.UserProfile {
+	return msg.UserProfile{
 		Inner: msg.InnerContent{
 			Email:     user.Email,
 			Bio:       user.Bio,
@@ -21,8 +21,8 @@ func ToProfile(user *model.User) *msg.UserProfile {
 	}
 }
 
-func ToUser(register *msg.RegisterMessage) *model.User {
-	return &model.User{
+func ToUser(register *msg.RegisterMessage) model.User {
+	return model.User{
 		Email:        register.Inner.Email,
 		Username:     register.Inner.Username,
 		PasswordHash: utils.HashPass(register.Inner.Password, utils.RandStringRunes(8)),
@@ -36,7 +36,7 @@ func FromLogon(logon *msg.LogonMessage) *model.User {
 	}
 }
 
-func Merge(user *model.User, profile *msg.UserProfile) model.User {
+func Merge(user model.User, profile *msg.UserProfile) model.User {
 	result := model.User{
 		ID:           user.ID,
 		Email:        user.Email,
@@ -54,13 +54,13 @@ func Merge(user *model.User, profile *msg.UserProfile) model.User {
 	if profile.Inner.Username != "" {
 		result.Username = profile.Inner.Username
 	}
-	// if profile.Inner.Bio != "" {
-	// 	result.Bio = profile.Inner.Bio
-	// }
+	if profile.Inner.Bio != "" {
+		result.Bio = profile.Inner.Bio
+	}
 	// if profile.Inner.Image != "" {
 	// 	result.Image = profile.Inner.Image
 	// }
-	result.Bio = profile.Inner.Bio
+	//result.Bio = profile.Inner.Bio
 	result.Image = profile.Inner.Image
 	result.Following = profile.Inner.Following
 	return result

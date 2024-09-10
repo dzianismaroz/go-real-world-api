@@ -18,7 +18,7 @@ func isPermitted(req *http.Request) bool {
 	switch {
 	case method == http.MethodPost && (path == "/api/users" || path == "/api/users/login"):
 		fallthrough
-	case method == http.MethodGet && path == "/api/tags":
+	case method == http.MethodGet && (path == "/api/tags" || path == "/api/articles"):
 		return true
 	default:
 		return false

@@ -6,7 +6,6 @@ toolchain go1.22.3
 
 require (
 	github.com/go-chi/chi v1.5.5
-	github.com/go-chi/chi/v5 v5.1.0
 	github.com/mcuadros/go-lookup v0.0.0-20200831155250-80f87a4fa5ee
 	golang.org/x/crypto v0.27.0
 	gopkg.in/d4l3k/messagediff.v1 v1.2.1

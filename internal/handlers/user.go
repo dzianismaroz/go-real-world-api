@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"rwa/internal/converter"
 	repository "rwa/internal/repository/inmemory"
@@ -15,8 +14,8 @@ type UserHandler struct {
 	service *s.UserService
 }
 
-func NewUserHandler() *UserHandler {
-	return &UserHandler{service: s.NewUserService()}
+func NewUserHandler(service *s.UserService) *UserHandler {
+	return &UserHandler{service: service}
 }
 
 // Register a new user
@@ -36,6 +35,8 @@ func (h *UserHandler) Register(rw http.ResponseWriter, req *http.Request) {
 	// reply with newly created user's profile
 
 	profile := converter.ToProfile(createdUser)
+	token := repository.GetSessionManager().Create(createdUser)
+	profile.Inner.Token = token
 	if respBytes, ok := utils.Marshall(rw, profile); ok {
 		utils.SafeResponseWrite(rw, respBytes, http.StatusCreated)
 	}
@@ -60,13 +61,11 @@ func (h *UserHandler) GetCurrent(rw http.ResponseWriter, req *http.Request) {
 func (h *UserHandler) UpdateCurrent(rw http.ResponseWriter, req *http.Request) {
 	updateMessage, err := utils.ReadFromRequest[msg.UserProfile](req)
 	if err != nil {
-		log.Println("!!!!!bad format")
 		http.Error(rw, fmt.Errorf("failed to update user : %w", err).Error(), http.StatusUnprocessableEntity)
 		return
 	}
 	result, err := h.service.Update(req, updateMessage)
 	if err != nil {
-		log.Println("!!!!!failed update")
 
 		http.Error(rw, fmt.Errorf("failed to update user : %w", err).Error(), http.StatusUnprocessableEntity)
 		return
@@ -103,4 +102,13 @@ func (h *UserHandler) Login(rw http.ResponseWriter, req *http.Request) {
 	if respBytes, ok := utils.Marshall(rw, profile); ok {
 		utils.SafeResponseWrite(rw, respBytes, http.StatusOK)
 	}
+}
+
+// Existing user logout
+func (h *UserHandler) Logout(rw http.ResponseWriter, req *http.Request) {
+	if err := repository.GetSessionManager().DestroyCurrent(rw, req); err != nil {
+		http.Error(rw, fmt.Errorf("failed to logout : %w", err).Error(), http.StatusInternalServerError)
+		return
+	}
+	utils.SafeResponseWrite(rw, nil, http.StatusOK)
 }

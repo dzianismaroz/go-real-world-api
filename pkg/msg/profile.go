@@ -21,8 +21,6 @@ func (up UserProfile) IsValid() bool {
 	switch {
 	case up.Inner.Email == "":
 		return false
-	// case up.Inner.Username == "":
-	// 	return false
 	default:
 		return true
 	}

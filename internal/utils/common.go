@@ -59,7 +59,6 @@ func Color(colorString string) func(...interface{}) {
 func ReadFromRequest[T ValidMessage](req *http.Request) (*T, error) {
 	var target T
 	rawBodyBytes, err := io.ReadAll(req.Body)
-	// log.Println("byte payload : " + string(rawBodyBytes))
 	defer closeResources(req.Body)
 	if err != nil {
 		return &target, fmt.Errorf("failed to register : %w", err)
@@ -71,7 +70,6 @@ func ReadFromRequest[T ValidMessage](req *http.Request) (*T, error) {
 	if !target.IsValid() {
 		return &target, fmt.Errorf("non-valid message")
 	}
-	// log.Printf("unmarshalled: %+v\n", target)
 	return &target, nil
 }
 
@@ -81,7 +79,6 @@ func Marshall[T any](rw http.ResponseWriter, entity T) ([]byte, bool) {
 		http.Error(rw, fmt.Errorf("failed to register : %w", err).Error(), http.StatusInternalServerError)
 		return nil, false
 	}
-	// log.Printf("marshalled: %+v\n", string(respBytes))
 	return respBytes, true
 }
 

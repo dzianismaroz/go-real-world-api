@@ -5,13 +5,15 @@ import (
 )
 
 type Article struct {
-	Author          *Author   `json:"author"`
-	CreatedAt       time.Time `json:"createdAt"`
-	Description     string    `json:"descrtiption"`
-	Favorited       bool      `json:"favourited"`
-	FavouritesCount int       `json:"favouritesCount"`
-	Slug            string    `json:"slug"`
-	TagList         []Tag     `json:"tagList"`
-	Title           string    `json:"title"`
-	UpdatedAt       time.Time `json:"updatedAt"`
+	ID              uint64
+	AuthorId        uint64
+	Body            string
+	CreatedAt       time.Time
+	Description     string
+	Favorited       bool
+	FavouritesCount uint32
+	Slug            string
+	TagList         []string
+	Title           string
+	UpdatedAt       time.Time
 }

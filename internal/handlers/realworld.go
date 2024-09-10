@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"rwa/internal/service"
 	"time"
 
 	"github.com/go-chi/chi"
@@ -26,10 +27,11 @@ func GetApp() http.Handler {
 
 func buildEndpoints() chi.Router {
 	r := chi.NewRouter()
-
+	userService := service.NewUserService()
 	r.Route("/users", func(r chi.Router) {
-		userHandler := NewUserHandler()
+		userHandler := NewUserHandler(userService)
 		r.Post("/login", userHandler.Login)
+		r.Post("/logout", userHandler.Logout)
 		r.Get("/", userHandler.GetCurrent)
 		r.Put("/", userHandler.UpdateCurrent)
 		r.Post("/", userHandler.Register)
@@ -44,7 +46,7 @@ func buildEndpoints() chi.Router {
 
 	r.Mount("/articles", func() http.Handler {
 		r := chi.NewRouter()
-		articleHandler := NewArticleHandler()
+		articleHandler := NewArticleHandler(userService)
 		r.Get("/", articleHandler.GetRecent)
 		r.Post("/", articleHandler.Create)
 		r.Get("/feed", articleHandler.GetByFollowers)

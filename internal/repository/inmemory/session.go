@@ -3,6 +3,7 @@ package repository
 import (
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	. "rwa/internal/repository/api"
 	"rwa/internal/utils"
@@ -13,7 +14,7 @@ import (
 
 const tokenConst = "Token "
 
-var lock = sync.RWMutex{}
+var lockSession = sync.RWMutex{}
 var instance *inMemSessionManager
 
 type inMemSessionManager struct {
@@ -23,8 +24,8 @@ type inMemSessionManager struct {
 
 func GetSessionManager() *inMemSessionManager {
 	if instance == nil {
-		lock.Lock()
-		defer lock.Unlock()
+		lockSession.Lock()
+		defer lockSession.Unlock()
 		instance = newInMemSessionManager()
 	}
 	return instance
@@ -42,8 +43,8 @@ func (im *inMemSessionManager) Check(req *http.Request) (UserId, error) {
 	if err != nil {
 		return 0, errors.New("no valid sessions")
 	}
-	lock.RLock()
-	defer lock.RUnlock()
+	lockSession.RLock()
+	defer lockSession.RUnlock()
 	if session, ok := im.sessions[token]; !ok {
 		return 0, fmt.Errorf("no valid sessions by id %s", token)
 	} else {
@@ -59,10 +60,11 @@ func extractTokenFrom(req *http.Request) (string, error) {
 	return strings.Replace(token, tokenConst, "", -1), nil
 }
 
-func (im *inMemSessionManager) Create(user *User) SessionId {
+func (im *inMemSessionManager) Create(user User) SessionId {
+	log.Println("----- creating session for user: ", user)
 	session := Session{UserId: user.ID, SessionId: utils.RandStringRunes(32)}
-	lock.Lock()
-	defer lock.Unlock()
+	lockSession.Lock()
+	defer lockSession.Unlock()
 	im.sessions[session.SessionId] = session
 	userSessions := im.sessionsOfUser[user.ID]
 	userSessions = append(userSessions, session)

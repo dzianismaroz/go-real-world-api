@@ -1,60 +1,63 @@
-Тема: API для приложения RealWorld
+Topic: API for RealWorld application
 
-Проблема придумать хорошее учебное приложение на самом деле довольно актуальна :)
+The problem of coming up with a good educational application is actually quite relevant :)
 
-Почти всегда это в том или ином виде CRUD. Но просто CRUD над одной сущностью это не так интересно. Поэтому надо чтобы сущностей было побольше со всякими связими между ними. Это позволит получить как раз опыт архитектуры приложения и подхода с паттерном репозиторий.
+Almost always it is CRUD in one form or another. But just CRUD over one entity is not so interesting. Therefore, it is necessary to have more entities with all sorts of connections between them. This will allow you to gain experience in the application architecture and the approach with the repository pattern.
 
-Есть на просторах интернета репозиторий https://github.com/gothinkster/realworld . В нем пишется клон проекта Medium на различных языках, как фронтентд, так и бакенд. Называется Conduit. Посмотрель в реальности его можно на сайте https://demo.realworld.io/#/ .
+There is a repository on the Internet https://github.com/gothinkster/realworld . It is written in a clone of the Medium project in various languages, both frontend and backend. It is called Conduit. You can see it in reality on the website https://demo.realworld.io/#/ .
 
-Как вы догадываетесь, мы будем писать свой бакенд для этого приложения.
+As you can guess, we will write our own backend for this application.
 
-Вернее, какое-то его подмножество - я сделал в тесте немного меньше сущностей, чем есть в самом realworld. +2 сущности радикально новому ничему не научат, а время потратят.
+Or rather, some subset of it - I made a little less entities in the test than there are in realworld itself. +2 entities will not teach anything radically new, but will waste time.
 
-У самого realworld есть набор тестов через Postman ( https://github.com/gothinkster/realworld/tree/master/api ) - но меня не удовлетворили те тесты, поэтому я реализовал части из них на гошке, чтобы вам не пришлось ставить никакую ноду. Но будет круто если ваша реализация пройдет часть этих тестов.
+Realworld itself has a set of tests via Postman ( https://github.com/gothinkster/realworld/tree/master/api ) - but I was not satisfied with those tests, so I implemented some of them on goshka so that you would not have to install any node. But it would be cool if your implementation passes some of these tests.
 
-В рамках этого задания вам надо попробовать:
-1. Разбиение проекта на отдельные компоненты (хендлеры-репозитории)
-2. Сессии (передаются через хедер Authorization) должны быть stateful. Если вы решите использовать JWT - то все равно сессия должна быть stateful. Причем храниться должна нормально, а не так что запомнили весь токен.
+As part of this task, you need to try:
+1. Splitting the project into separate components (repository handlers)
+2. Sessions (transmitted via the Authorization header) must be stateful. If you decide to use JWT, the session must still be stateful. And it must be stored normally, and not so that the entire token is remembered.
 
-Реализовать придется следующие сущности:
-* Юзер
-* Сессия
-* Статьи с различными фильтрами
+The following entities will have to be implemented:
+* User
+* Session
+* Articles with various filters
 
-По желанию, конечно же можнео реализовать все остальные сущности с отдельными тестами.
+Of course, you can implement all the other entities with separate tests if you wish.
 
-Можно следовать предлагаемой структуре и не бить по пакетам, а можно чуть подправить и разделить как если бы это было бы в реальности - см crudapp за основу. Код надо писать в файле realworld.go если вы решите следовать 1-му варианту.
+You can follow the proposed structure and not hit the packages, or you can slightly correct and divide as if it were in reality - see crudapp as a basis. The code should be written in the realworld.go file if you decide to follow the 1st option.
 
-Как обычно во всех заданиях этого и предыдущих курсов - данное описание - это базовая постановка задачи, все остальное придется получать из тестов. Тестов не очень много, но они выполнены достаточно универстально в табличном виде и некоторым количеством магии, разобраться в которой вам так же будет полезно :)
+As usual in all assignments of this and previous courses - this description is a basic statement of the problem, everything else will have to be obtained from tests. There are not many tests, but they are done quite universally in a tabular form and with some magic, which will also be useful for you to understand :)
 
-Так же у проекта realworld есть swagger схема. Она приложена в задании в папке swagger. Можно запустить сервер документации (находясь в папке rwa/swagger ):
+The realworld project also has a swagger scheme. It is attached to the assignment in the swagger folder. You can run the documentation server (located in the rwa/swagger folder):
 
 * go get -u github.com/go-swagger/go-swagger/cmd/swagger
 * swagger serve swagger.json -p 8085
 
-Успехов!
+Good luck!
 
-P.S. В этой домашке могут быть баги, будьте внимательны. Но у меня есть рабочее решение, так что убедитесь сначала что это именно бага, а вопросы по реализации.
+P.S. There may be bugs in this homework, be careful. But I have a working solution, so first make sure that this is a bug, and not an implementation issue.
 
-Как работают тесты:
+How tests work:
 
-* В этом задании у вас есть большой набор интеграционных тестов. Интеграционных это значит что они тестируют всю цепочку с учетом изменяемого состояния системы - если я добавил что-то, то потом должен уметь это прочитать. 
-* За счет этого вы можете двигаться буквально по одному шагу, дописывая код чтобы выполнился очередной тест-кейс - как это было во 2-й домашке с игрой.
-* Все тесты располагаются в app_test.go - там от вас получается хттп-хендлер (см план работы ниже) и запихивается в тестовый сервер.
-* у теста есть имя - по нему обычно понятно что мы тестируем. Остальыне поля +- говорят за себя. Обратите внимание - кое-где есть триггеры "до" и "после" - в них происходит, например, установка-замена авторизационного токена.
+* In this task, you have a large set of integration tests. Integration means that they test the entire chain taking into account the changing state of the system - if I added something, then I should be able to read it later.
 
-Про токен:
+* Due to this, you can move literally one step at a time, finishing the code to execute the next test case - as it was in the 2nd homework with the game.
 
-Токен это, в общем, сессия. Но которая передается не через куки, а черех хттп-хедеры. Вы можете или использовать токен как сессионный ключ, или сделать jwt-токен с доп дарными (можете в redditclone про это прочитать). Рекомендую начать с сессионного ключа (который у вас будет просто ключем в мапке сессий).
+* All tests are located in app_test.go - there you get an HTTP handler (see the work plan below) and push it into the test server.
 
-Про POST&ko запросы:
+* the test has a name - it usually tells you what we are testing. The rest of the +- fields speak for themselves. Note - in some places there are triggers "before" and "after" - in them, for example, the installation and replacement of an authorization token occurs.
 
-На сервер уходит тело запроса в формате жсон, не форм-урлэнкодед. Значит надо вычитать тело и распаковать жсон. Обязательно проверять ошибки! В предыдущей лекции было как вычитывать тело запроса.
+About the token:
 
-План работы:
+A token is basically a session. But it is transmitted not via cookies, but via HTTP headers. You can either use the token as a session key, or make a JWT token with additional ones (you can read about it in redditclone). I recommend starting with a session key (which will simply be a key in your session map).
 
-* С точки зрения кода - вся лекция посвящена тому как делать это задание. но не копипастите код оттуда!!! все писать самостоятельно 
-* В результате вам надо раздробить решение на пакеты в соотвтетсвии с https://github.com/golang-standards/project-layout и тем что я рассказывал на лекции с crudapp
-* Тут нет параметров в урле, но есть разделение по GET/POST/etc методам - можно или через switch-case зайти в нужную функцию, или вкрутить другой роутер (например, gorilla/mux или что побыстрее) и сразу роут цеплять к нужному методу. в лекции был пример. но обратите внимание как в gorilla/mux использовать миддлверы - почитайте там в доке
-* Помните что нам надо разбить логику на слои: handler -> repository -> db (сейчас слайсы и мапы).
-* Если хотите чистую архитектуру, то слоев у вас будет больше: delivery/http -> usercase -> repository -> db (сейчас слайсы и мапы)
+About POST&ko requests:
+
+The request body is sent to the server in JSON format, not form-URL-encoded. So you need to read the body and unpack the JSON. Be sure to check for errors! The previous lecture covered how to read the request body.
+
+Work plan:
+
+* In terms of code, the entire lecture is dedicated to how to do this task. But do not copy-paste the code from there!!! write everything yourself
+* As a result, you need to split the solution into packages in accordance with https://github.com/golang-standards/project-layout and what I told in the lecture with crudapp
+* There are no parameters in the URL, but there is a division by GET / POST / etc methods - you can either go to the desired function through switch-case, or screw in another router (for example, gorilla / mux or something faster) and immediately hook the route to the desired method. There was an example in the lecture. but pay attention to how to use middleware in gorilla / mux - read there in the doc
+* Remember that we need to split the logic into layers: handler -> repository -> db (currently slices and maps).
+* If you want a clean architecture, then you will have more layers: delivery / http -> usercase -> repository -> db (currently slices and maps)

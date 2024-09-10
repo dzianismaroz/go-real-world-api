@@ -457,21 +457,21 @@ func TestApp(t *testing.T) {
 		{
 			Name:           "No Auth - Current User Logout - Require Auth",
 			Method:         "POST",
-			URL:            "{{APIURL}}/user/logout",
+			URL:            "{{APIURL}}/users/logout",
 			TokenName:      "", // none
 			ResponseStatus: 401,
 		},
 		{
 			Name:           "No Auth - Current User Logout",
 			Method:         "POST",
-			URL:            "{{APIURL}}/user/logout",
+			URL:            "{{APIURL}}/users/logout",
 			TokenName:      "token1",
 			ResponseStatus: 200,
 		},
 		{
 			Name:           "No Auth - Current User - No Auth after logout",
 			Method:         "GET",
-			URL:            "{{APIURL}}/user",
+			URL:            "{{APIURL}}/users",
 			TokenName:      "token1",
 			ResponseStatus: 401,
 		},
